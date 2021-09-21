@@ -34,12 +34,15 @@ __used __section("__versions") = {
 	{ 0x8e1984a8, "device_create" },
 	{ 0x6091b333, "unregister_chrdev_region" },
 	{ 0x21a54c1d, "__class_create" },
-	{ 0xe633eeed, "__register_chrdev" },
+	{ 0xe3ec2f2b, "alloc_chrdev_region" },
 	{ 0xc5850110, "printk" },
+	{ 0xbb72d4fe, "__put_user_1" },
+	{ 0x79aa04a2, "get_random_bytes" },
+	{ 0x8f678b07, "__stack_chk_guard" },
 	{ 0xb1ad28e0, "__gnu_mcount_nc" },
 };
 
 MODULE_INFO(depends, "");
 
 
-MODULE_INFO(srcversion, "DBD7AB2712E239FB56D0022");
+MODULE_INFO(srcversion, "68107BB7354B562046D344B");

@@ -844,6 +844,13 @@ deps_/root/Documents/DD/DD_Assignment1/main.o := \
     $(wildcard include/config/arch/omap.h) \
   include/linux/pm_wakeup.h \
   include/linux/cdev.h \
+  include/linux/random.h \
+    $(wildcard include/config/arch/random.h) \
+  include/linux/once.h \
+  include/uapi/linux/random.h \
+  include/linux/irqnr.h \
+  include/uapi/linux/irqnr.h \
+  include/linux/prandom.h \
   /root/Documents/DD/DD_Assignment1/config.h \
 
 /root/Documents/DD/DD_Assignment1/main.o: $(deps_/root/Documents/DD/DD_Assignment1/main.o)

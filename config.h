@@ -3,7 +3,7 @@
 
 #include <linux/ioctl.h>
 
-#define MAGIC_NUM 456
+#define MAGIC_NUM 225
 
 #define IOCTL_MAGNET_X _IOWR(MAGIC_NUM, 0, char *)
 #define IOCTL_MAGNET_Y _IOWR(MAGIC_NUM, 1, char *)
