@@ -1,3 +1,5 @@
+//Kernel Includes
+
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/fs.h>
@@ -8,8 +10,11 @@
 #include <linux/ioctl.h>
 #include <linux/random.h>
 
+//Common Header for IOCTL Interface
+
 #include "config.h"
 
+//Basic defines for frequent usage values
 #define SUCCESS 0
 #define DEVICE_NAME "imu_char"
 
@@ -17,15 +22,17 @@ static dev_t first; // variable for device number
 static struct cdev c_dev; // variable for the character device structure
 static struct class *cls; // variable for the device class
 
-static int device_open = 0;
-static int bit_select = 0;
+static int device_open = 0; //Device busy flag variable
+static int bit_select = 0; //MPU9255 and BMP280 read switch flag
 
+
+//Open Attached Character Device
 static int open_dev(struct inode *i, struct file *f)
 {
-        if(device_open)
+        if(device_open) //Device busy check
          return -EBUSY;
 
-        device_open++;
+        device_open++; //Raise busy flag
         try_module_get(THIS_MODULE);
 
 	printk(KERN_INFO "Device Open\n");
@@ -34,7 +41,7 @@ static int open_dev(struct inode *i, struct file *f)
 
 static int close_dev(struct inode *i, struct file *f)
 {
-        device_open--;
+        device_open--; //Reset the device busy flag
         module_put(THIS_MODULE);
 
 	printk(KERN_INFO "Device Close\n");
@@ -42,11 +49,11 @@ static int close_dev(struct inode *i, struct file *f)
 }
 static ssize_t read_dev(struct file *f, char __user *buf, size_t len, loff_t *off)
 {
- uint16_t val,i=0;
+ uint16_t val,i=0; //Val - Variable to hold random number
  char *addr;
- get_random_bytes(&val, sizeof(val));
+ get_random_bytes(&val, sizeof(val)); //Generate random number and store it
  
- if(bit_select)
+ if(bit_select) //MPU9255 and BMP280 switch
  {
   val = val%1023;
  }
@@ -55,7 +62,7 @@ static ssize_t read_dev(struct file *f, char __user *buf, size_t len, loff_t *of
  while(i<2)
  {
   //printk(KERN_INFO "Copied Char:%d\n",*addr);
-  put_user(*(addr++),buf++);
+  put_user(*(addr++),buf++); //Copy generated value from kernel to user space
   i++;
  }
  //printk(KERN_INFO "Device read(Buf:%s,Len:%d,Data:%d)\n",buf,len,val);
@@ -64,16 +71,16 @@ static ssize_t read_dev(struct file *f, char __user *buf, size_t len, loff_t *of
 
 static ssize_t write_dev(struct file *f, const char __user *buf, size_t len, loff_t *off)
 {
- printk(KERN_INFO "Device write(Regsiter:%s)\n",buf);
+ printk(KERN_INFO "Device write(Regsiter:%s)\n",buf); //Write to specific register to read a value
  return len;
 }
  
 long ioctl_dev(struct file *file, unsigned int ioctl_num, unsigned long ioctl_param)
 {
- char *reg_no="0";
+ char *reg_no="0"; //Register choose variable
  int i;
 
- bit_select=0;
+ bit_select=0; //Flag to switch between MPU9255 and BMP280
  switch(ioctl_num)
  {
   case IOCTL_MAGNET_X:
@@ -152,6 +159,7 @@ long ioctl_dev(struct file *file, unsigned int ioctl_num, unsigned long ioctl_pa
 return SUCCESS;
 }
 
+//File operations structure for Driver
 static struct file_operations fops =
 {
   .owner        = THIS_MODULE,

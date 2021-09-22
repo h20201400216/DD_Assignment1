@@ -1,0 +1,1 @@
+cmd_/root/Documents/DD/G547/DD_Assignment1/main.ko := ld -r  -EL  --build-id=sha1  -T scripts/module.lds -o /root/Documents/DD/G547/DD_Assignment1/main.ko /root/Documents/DD/G547/DD_Assignment1/main.o /root/Documents/DD/G547/DD_Assignment1/main.mod.o;  true

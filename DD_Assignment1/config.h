@@ -5,6 +5,8 @@
 
 #define MAGIC_NUM 225
 
+//IOCTL interface prototypes
+
 #define IOCTL_MAGNET_X _IOWR(MAGIC_NUM, 0, char *)
 #define IOCTL_MAGNET_Y _IOWR(MAGIC_NUM, 1, char *)
 #define IOCTL_MAGNET_Z _IOWR(MAGIC_NUM, 2, char *)
@@ -16,6 +18,8 @@
 #define IOCTL_GYRO_Z _IOWR(MAGIC_NUM, 8, char *)
 #define IOCTL_PRESSURE _IOWR(MAGIC_NUM, 9, char *)
 
+
+//Device file interface
 #define DEVICE_FILE_NAME "/dev/imu_char"
 
 #endif
