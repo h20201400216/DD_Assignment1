@@ -19,6 +19,7 @@ static struct class *cls; // variable for the device class
 
 static int device_open = 0;
 static int bit_select = 0;
+
 static int open_dev(struct inode *i, struct file *f)
 {
         if(device_open)
@@ -53,11 +54,11 @@ static ssize_t read_dev(struct file *f, char __user *buf, size_t len, loff_t *of
  addr = (char *)&val;
  while(i<2)
  {
-  printk(KERN_INFO "Copied Char:%d\n",*addr);
+  //printk(KERN_INFO "Copied Char:%d\n",*addr);
   put_user(*(addr++),buf++);
   i++;
  }
- printk(KERN_INFO "Device read(Buf:%s,Len:%d,Data:%d)\n",buf,len,val);
+ //printk(KERN_INFO "Device read(Buf:%s,Len:%d,Data:%d)\n",buf,len,val);
  return i;
 }
 
@@ -76,52 +77,72 @@ long ioctl_dev(struct file *file, unsigned int ioctl_num, unsigned long ioctl_pa
  switch(ioctl_num)
  {
   case IOCTL_MAGNET_X:
+   reg_no="1";
+   i = write_dev(file,reg_no,2,0);
    i = read_dev(file, (char *)ioctl_param,2,0);
    put_user('\0',(char *)ioctl_param+i);
    break;
 
   case IOCTL_MAGNET_Y:
+   reg_no="2";
+   i = write_dev(file,reg_no,2,0);
    i = read_dev(file, (char *)ioctl_param,2,0);
    put_user('\0',(char *)ioctl_param+i);
    break;
 
   case IOCTL_MAGNET_Z:
+   reg_no="3";
+   i = write_dev(file,reg_no,2,0);
    i = read_dev(file, (char *)ioctl_param,2,0);
    put_user('\0',(char *)ioctl_param+i);
    break;
 
   case IOCTL_ACCEL_X:
+   reg_no="4";
+   i = write_dev(file,reg_no,2,0);
    i = read_dev(file, (char *)ioctl_param,2,0);
    put_user('\0',(char *)ioctl_param+i);
    break;
 
   case IOCTL_ACCEL_Y:
+   reg_no="5";
+   i = write_dev(file,reg_no,2,0);
    i = read_dev(file, (char *)ioctl_param,2,0);
    put_user('\0',(char *)ioctl_param+i);
    break;
 
   case IOCTL_ACCEL_Z:
+   reg_no="6";
+   i = write_dev(file,reg_no,2,0);
    i = read_dev(file, (char *)ioctl_param,2,0);
    put_user('\0',(char *)ioctl_param+i);
    break;
 
   case IOCTL_GYRO_X:
+   reg_no="7";
+   i = write_dev(file,reg_no,2,0);
    i = read_dev(file, (char *)ioctl_param,2,0);
    put_user('\0',(char *)ioctl_param+i);
    break;
 
   case IOCTL_GYRO_Y:
+   reg_no="8";
+   i = write_dev(file,reg_no,2,0);
    i = read_dev(file, (char *)ioctl_param,2,0);
    put_user('\0',(char *)ioctl_param+i);
    break;
 
   case IOCTL_GYRO_Z:
+   reg_no="9";
+   i = write_dev(file,reg_no,2,0);
    i = read_dev(file, (char *)ioctl_param,2,0);
    put_user('\0',(char *)ioctl_param+i);
    break;
 
   case IOCTL_PRESSURE:
    bit_select = 1;
+   reg_no="10";
+   i = write_dev(file,reg_no,2,0);
    i = read_dev(file, (char *)ioctl_param,2,0);
    put_user('\0',(char *)ioctl_param+i);
    break;

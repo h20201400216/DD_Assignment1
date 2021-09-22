@@ -39,14 +39,13 @@ __used __section("__versions") = {
 	{ 0x56c8f948, "module_put" },
 	{ 0x86332725, "__stack_chk_fail" },
 	{ 0xbb72d4fe, "__put_user_1" },
-	{ 0xc5850110, "printk" },
 	{ 0x79aa04a2, "get_random_bytes" },
 	{ 0x8f678b07, "__stack_chk_guard" },
+	{ 0xc5850110, "printk" },
 	{ 0xb1ad28e0, "__gnu_mcount_nc" },
-	{ 0xf7802486, "__aeabi_uidivmod" },
 };
 
 MODULE_INFO(depends, "");
 
 
-MODULE_INFO(srcversion, "59267CA9B77CDB552ED300F");
+MODULE_INFO(srcversion, "917ACA821702CA631944839");
