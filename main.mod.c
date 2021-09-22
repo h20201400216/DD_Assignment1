@@ -35,8 +35,9 @@ __used __section("__versions") = {
 	{ 0x6091b333, "unregister_chrdev_region" },
 	{ 0x21a54c1d, "__class_create" },
 	{ 0xe3ec2f2b, "alloc_chrdev_region" },
-	{ 0xc5850110, "printk" },
+	{ 0x86332725, "__stack_chk_fail" },
 	{ 0xbb72d4fe, "__put_user_1" },
+	{ 0xc5850110, "printk" },
 	{ 0x79aa04a2, "get_random_bytes" },
 	{ 0x8f678b07, "__stack_chk_guard" },
 	{ 0xb1ad28e0, "__gnu_mcount_nc" },
@@ -45,4 +46,4 @@ __used __section("__versions") = {
 MODULE_INFO(depends, "");
 
 
-MODULE_INFO(srcversion, "68107BB7354B562046D344B");
+MODULE_INFO(srcversion, "E910DCDB8698115136083B2");

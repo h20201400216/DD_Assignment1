@@ -41,10 +41,13 @@ static ssize_t read_dev(struct file *f, char __user *buf, size_t len, loff_t *of
  addr = (char *)&val;
  while(i<2)
  {
+  printk(KERN_INFO "Copied Char:%d\n",*addr);
   put_user(*(addr++),buf++);
+  i++;
  }
+ put_user('\0',buf++);
  printk(KERN_INFO "Device read(Buf:%s,Len:%d,Data:%d)\n",buf,len,val);
- return 0;
+ return i;
 }
 
 static ssize_t write_dev(struct file *f, const char __user *buf, size_t len, loff_t *off)
