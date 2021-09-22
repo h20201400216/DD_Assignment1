@@ -11,33 +11,45 @@
 #include "config.h"
 
 #define SUCCESS 0
-#define DEVICE_NAME "myimudrv"
-#define BUF_LEN 20
-
-static int device_Open = 0;
-static char msg[BUF_LEN];
-static char *msg_ptr;
+#define DEVICE_NAME "imu_char"
 
 static dev_t first; // variable for device number
 static struct cdev c_dev; // variable for the character device structure
 static struct class *cls; // variable for the device class
 
+static int device_open = 0;
+static int bit_select = 0;
 static int open_dev(struct inode *i, struct file *f)
 {
-	printk(KERN_INFO "Mychar : open()\n");
-	return 0;
+        if(device_open)
+         return -EBUSY;
+
+        device_open++;
+        try_module_get(THIS_MODULE);
+
+	printk(KERN_INFO "Device Open\n");
+	return SUCCESS;
 }
 
 static int close_dev(struct inode *i, struct file *f)
 {
-	printk(KERN_INFO "Mychar : close()\n");
-	return 0;
+        device_open--;
+        module_put(THIS_MODULE);
+
+	printk(KERN_INFO "Device Close\n");
+	return SUCCESS;
 }
 static ssize_t read_dev(struct file *f, char __user *buf, size_t len, loff_t *off)
 {
- int val,i=0;
+ uint16_t val,i=0;
  char *addr;
  get_random_bytes(&val, sizeof(val));
+ 
+ if(bit_select)
+ {
+  val = val%1023;
+ }
+
  addr = (char *)&val;
  while(i<2)
  {
@@ -45,7 +57,6 @@ static ssize_t read_dev(struct file *f, char __user *buf, size_t len, loff_t *of
   put_user(*(addr++),buf++);
   i++;
  }
- put_user('\0',buf++);
  printk(KERN_INFO "Device read(Buf:%s,Len:%d,Data:%d)\n",buf,len,val);
  return i;
 }
@@ -61,6 +72,7 @@ long ioctl_dev(struct file *file, unsigned int ioctl_num, unsigned long ioctl_pa
  char *reg_no="0";
  int i;
 
+ bit_select=0;
  switch(ioctl_num)
  {
   case IOCTL_MAGNET_X:
@@ -109,6 +121,7 @@ long ioctl_dev(struct file *file, unsigned int ioctl_num, unsigned long ioctl_pa
    break;
 
   case IOCTL_PRESSURE:
+   bit_select = 1;
    i = read_dev(file, (char *)ioctl_param,2,0);
    put_user('\0',(char *)ioctl_param+i);
    break;
@@ -145,7 +158,7 @@ static int __init mydev_init(void)
   return -1;
  }
  
- if (device_create(cls, NULL, first, NULL, "myimudrv") == NULL)
+ if (device_create(cls, NULL, first, NULL, "imu_char") == NULL)
  {
   printk(KERN_INFO "Device not created\n");
   class_destroy(cls);

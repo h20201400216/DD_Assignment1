@@ -16,6 +16,6 @@
 #define IOCTL_GYRO_Z _IOWR(MAGIC_NUM, 8, char *)
 #define IOCTL_PRESSURE _IOWR(MAGIC_NUM, 9, char *)
 
-#define DEVICE_FILE_NAME "/dev/myimudrv"
+#define DEVICE_FILE_NAME "/dev/imu_char"
 
 #endif

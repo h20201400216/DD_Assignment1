@@ -35,15 +35,18 @@ __used __section("__versions") = {
 	{ 0x6091b333, "unregister_chrdev_region" },
 	{ 0x21a54c1d, "__class_create" },
 	{ 0xe3ec2f2b, "alloc_chrdev_region" },
+	{ 0xb134c6d9, "try_module_get" },
+	{ 0x56c8f948, "module_put" },
 	{ 0x86332725, "__stack_chk_fail" },
 	{ 0xbb72d4fe, "__put_user_1" },
 	{ 0xc5850110, "printk" },
 	{ 0x79aa04a2, "get_random_bytes" },
 	{ 0x8f678b07, "__stack_chk_guard" },
 	{ 0xb1ad28e0, "__gnu_mcount_nc" },
+	{ 0xf7802486, "__aeabi_uidivmod" },
 };
 
 MODULE_INFO(depends, "");
 
 
-MODULE_INFO(srcversion, "E910DCDB8698115136083B2");
+MODULE_INFO(srcversion, "59267CA9B77CDB552ED300F");
