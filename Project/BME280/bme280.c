@@ -1,3 +1,4 @@
+/* General Includes for Kernel Compilation */
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/fs.h>
@@ -8,33 +9,43 @@
 #include <linux/i2c.h>
 #include <linux/kernel.h>
 
+/* IOCTL Call Definition Header */
 #include "config.h"
 
-#define DRIVER_NAME "bme280"
-#define DRIVER_CLASS "bme280Class"
+#define DRIVER_NAME "bme280" //Name of the driver to be created
+#define DRIVER_CLASS "bme280Class" //Name of the class to be used for driver
 
-typedef uint32_t BME280_U32_t;
+/* User-defined data types for Pressure compensation algorithm */
+
+typedef uint32_t BME280_U32_t; 
 typedef int32_t BME280_S32_t;
 
-static struct i2c_adapter * bme_i2c_adapter = NULL;
-static struct i2c_client * bme280_i2c_client = NULL;
 
-int32_t calib_T1,calib_T2,calib_T3,calib_Tfine;
+static struct i2c_adapter * bme_i2c_adapter = NULL; //I2C Adapter 
+static struct i2c_client * bme280_i2c_client = NULL; //I2C Client 
+
+/* Variables for holding Trim parameters from the sensor */
+
+int32_t calib_T1,calib_T2,calib_T3,calib_Tfine; 
 int32_t calib_P1,calib_P2,calib_P3,calib_P4,calib_P5,calib_P6,calib_P7,calib_P8,calib_P9;;
 int32_t calib_H1,calib_H2,calib_H3,calib_H4,calib_H5,calib_H6;
 
-MODULE_AUTHOR("Jeevaraam K");
+/* Driver Metadata */
+MODULE_AUTHOR("Jeevaraam K, Rishi S Phaye");
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("BME280 Sensor Kernel Driver");
 
-#define I2C_BUS_USED       1               /* The I2C Bus available on the raspberry */
-#define BME280_SENSOR_NAME       "BME280"        /* Device and Driver Name */
-#define BME280_SLAVE_ADDRESS    0x77            /* BMP280 I2C address */
+#define I2C_BUS_USED       1 //I2C Bus used for Communication
+#define BME280_SENSOR_NAME       "BME280" //Sensor name for Metadata
+#define BME280_SLAVE_ADDRESS    0x77 //I2C Address of Sensor used
 
+/* Device ID Structure Initialization */
 static const struct i2c_device_id bme280_dev_id[]={
 { BME280_SENSOR_NAME, 0},
 { }
 };
+
+/* I2C Driver Structure Initialization */
 
 static struct i2c_driver bme280_driver = {
  .driver = {
@@ -43,14 +54,20 @@ static struct i2c_driver bme280_driver = {
   }
 };
 
+/* Board and Device Mapping Structure */
+
 static struct i2c_board_info bme280_i2c_board_info = {
  I2C_BOARD_INFO(BME280_SENSOR_NAME, BME280_SLAVE_ADDRESS)
 };
 
 
-static dev_t bme280_device_number;
-static struct class *bme280_class;
-static struct cdev bme280_device;
+static dev_t bme280_device_number; //Major and Minor Number holding variable
+static struct class *bme280_class; //Sensor class variable
+static struct cdev bme280_device; //Char device for Sensor
+
+/*BME280 Compensation Routines */
+
+/* Compensation Routine for reading and Converting Raw Sensor value to Humidity Values */
 
 static uint32_t read_humidity(void)
 {
@@ -65,10 +82,13 @@ static uint32_t read_humidity(void)
     uint8_t lsb,msb;
     uint32_t current_humidity;
 
+    /*Read Raw values from sensor */
     lsb = i2c_smbus_read_byte_data(bme280_i2c_client, 0xFE);
     msb = i2c_smbus_read_byte_data(bme280_i2c_client, 0xFD);
 
     current_humidity = ((uint32_t)msb<<8) | ((uint32_t)lsb);
+
+    /* Compensation Algorithm */
 
     var1 = calib_Tfine - ((int32_t)76800);
     var2 = (int32_t)(current_humidity * 16384);
@@ -93,6 +113,9 @@ static uint32_t read_humidity(void)
 
     return humidity;
 }
+
+/* Compensation Routine for reading and Converting Raw Sensor value to Pressure Values */
+
 static uint32_t read_pressure(void)
 {
  /*int32_t var1;
@@ -100,14 +123,24 @@ static uint32_t read_pressure(void)
  int32_t var3;
  int32_t var4;
  uint32_t var5;*/
- uint32_t pressure;
  uint32_t current_pressure;
  uint8_t lsb,msb,xlsb;
- uint32_t pressure_min = 30000;
- uint32_t pressure_max = 110000;
 
  BME280_S32_t var1, var2;
  BME280_U32_t p;
+
+ /* Read raw values from Sensor */
+
+ lsb = i2c_smbus_read_byte_data(bme280_i2c_client,0xF8);
+ msb = i2c_smbus_read_byte_data(bme280_i2c_client,0xF7);
+ xlsb = i2c_smbus_read_byte_data(bme280_i2c_client, 0xF9);
+
+ current_pressure = (((uint32_t)msb)<<12) | ((uint32_t)lsb<<4) | ((uint32_t)xlsb>>4);
+// current_pressure = ( (current_pressure<<4) | ( (uint32_t) (xlsb&0xF0) >>4 ) );
+ printk("Pressure:%x\n",current_pressure);
+
+ /* Compensation Algorithm */
+
  var1 = (((BME280_S32_t)calib_Tfine)>>1) - (BME280_S32_t)64000;
  var2 = (((var1>>2) * (var1>>2)) >> 11 ) * ((BME280_S32_t)calib_P6);
  var2 = var2 + ((var1*((BME280_S32_t)calib_P5))<<1);
@@ -138,12 +171,6 @@ static uint32_t read_pressure(void)
  int64_t var4;
  uint32_t pressure;*/
 
- lsb = i2c_smbus_read_byte_data(bme280_i2c_client,0xF8);
- msb = i2c_smbus_read_byte_data(bme280_i2c_client,0xF7);
- xlsb = i2c_smbus_read_byte_data(bme280_i2c_client, 0xF9);
- current_pressure = (((uint32_t)msb)<<12) | ((uint32_t)lsb<<4) | ((uint32_t)xlsb>>4);
-// current_pressure = ( (current_pressure<<4) | ( (uint32_t) (xlsb&0xF0) >>4 ) );
- printk("Pressure:%x\n",current_pressure);
 
  /*var1 = (((int32_t)calib_Tfine) / 2) - (int32_t)64000;
  var2 = (((var1 / 4) * (var1 / 4)) / 2048) * ((int32_t)calib_P6);
@@ -213,6 +240,8 @@ static uint32_t read_pressure(void)
  //   return pressure;
 }
 
+/* Compensation Routine for reading and Converting Raw Sensor value to Temperature Values */
+
 static int32_t read_temperature(void)
 {
  int32_t var1,var2;
@@ -220,9 +249,13 @@ static int32_t read_temperature(void)
  int32_t temperature;
  int32_t finalTemp;
 
+ /* Read raw values from Sensor */
+
  aTemp = i2c_smbus_read_byte_data(bme280_i2c_client, 0xFA);
  bTemp = i2c_smbus_read_byte_data(bme280_i2c_client, 0xFB);
  cTemp = i2c_smbus_read_byte_data(bme280_i2c_client, 0xFC);
+
+ /* Compensation Algorithm */
 
  temperature = (((int32_t)aTemp) << 12) | (((int32_t)bTemp) << 4) | (((int32_t)cTemp) >> 4); 
  var1 = (int32_t)((temperature / 8) - ((int32_t)calib_T1 * 2));
@@ -237,6 +270,8 @@ static int32_t read_temperature(void)
  return finalTemp;
 }
 
+/* Direct Call Read routine for I2C device */
+
 static ssize_t bme280_driver_read(struct file *File, char __user *user_buffer, size_t count, loff_t *offs)
 {
  int to_copy, not_copied, delta;
@@ -247,10 +282,12 @@ static ssize_t bme280_driver_read(struct file *File, char __user *user_buffer, s
 
  to_copy = min(sizeof(out_string), count);
 
+ /* Read all 3 values */
  temperature = read_temperature();
  pressure = read_pressure();
  humidity = read_humidity();
 
+ /* Transfer the read values */
  snprintf(out_string, sizeof(out_string), "T:%d,P:%d,H:%d\n",temperature,pressure,humidity);
  not_copied = copy_to_user(user_buffer, out_string, to_copy);
 
@@ -259,18 +296,26 @@ static ssize_t bme280_driver_read(struct file *File, char __user *user_buffer, s
  return delta;
 }
 
+/* IOCTL Call routine */
+
 long ioctl_dev(struct file *file, unsigned int ioctl_num, unsigned long ioctl_param)
 {
  
  switch(ioctl_num)
  {
+  /* IOCTL Call for Temperature */
+
   case IOCTL_TEMPERATURE:
   put_user(read_temperature(),(int32_t*)ioctl_param);
   break;
+
+  /* IOCTL Call for Pressure */
  
   case IOCTL_PRESSURE:
   put_user(read_pressure(),(int32_t*)ioctl_param);
   break;
+
+  /* IOCTL Call for Humidity */
 
   case IOCTL_HUMIDITY:
   put_user(read_humidity(),(int32_t*)ioctl_param);
@@ -279,17 +324,23 @@ long ioctl_dev(struct file *file, unsigned int ioctl_num, unsigned long ioctl_pa
 return 0;
 }
 
+/* Driver open routine */
+
 static int bme280_driver_open(struct inode *deviceFile, struct file *instance)
 {
  printk("Driver Open\n");
  return 0;
 }
 
+/* Driver close routine */
+
 static int bme280_driver_close(struct inode *deviceFile, struct file *instance) 
 {
  printk("Driver Close\n");
  return 0;
 }
+
+/* File Operations structure for Open, Close, Read and IOCTL routines linkage */
 
 static struct file_operations fops  = {
  .owner = THIS_MODULE,
@@ -299,6 +350,8 @@ static struct file_operations fops  = {
  .read = bme280_driver_read,
 };
 
+/* Driver Initialization Routine */
+
 static int __init bme280Init(void)
 {
  int ret =-1;
@@ -306,45 +359,57 @@ static int __init bme280Init(void)
  u8 id;
  printk("Driver Init\n");
 
+ /* Allocating Random Major number from Linux with one device */
+
  if ( alloc_chrdev_region(&bme280_device_number, 0, 1, DRIVER_NAME) < 0) 
  {
-  printk("Device Nr. could not be allocated!\n");
+  printk("Device Number could not be allocated!\n");
  }
  
- printk("Driver - Device Nr %d was registered\n", bme280_device_number);
+ printk("Device Number %d was registered\n", bme280_device_number);
 
-        /* Create Device Class */
+ /* Create Device Class */
+
  if ((bme280_class = class_create(THIS_MODULE, DRIVER_CLASS)) == NULL) 
  {
   printk("Device Class can not be created!\n");
   goto ClassError;
  }
 
-        /* Create Device file */
+ /* Create Device file */
+
  if (device_create(bme280_class, NULL, bme280_device_number, NULL, DRIVER_NAME) == NULL) 
  {
   printk("Can not create device file!\n");
   goto FileError;
  }
 
-        /* Initialize Device file */
+ /* Initialize Device file */
+
  cdev_init(&bme280_device, &fops);
 
-        /* register device to kernel */
+ /* register device to kernel */
+
  if (cdev_add(&bme280_device, bme280_device_number, 1) == -1) 
  {
   printk("Registering of device to kernel failed!\n");
   goto KernelError;
  }
 
+ /* Locking I2C Bus Adapter */
+
  bme_i2c_adapter = i2c_get_adapter(I2C_BUS_USED);
 
  if(bme_i2c_adapter != NULL) 
  {
+  /* I2C Client Static Link */
+
   bme280_i2c_client = i2c_new_client_device(bme_i2c_adapter, &bme280_i2c_board_info);
  
   if(bme280_i2c_client != NULL) 
   {
+   /* Add I2C Driver */
+
    if(i2c_add_driver(&bme280_driver) != -1) 
    {
     ret = 0;
@@ -352,13 +417,19 @@ static int __init bme280Init(void)
    else
     printk("Can't add driver...\n");
   }
+  /* Releasing I2C Bus Adapter */
+
   i2c_put_adapter(bme_i2c_adapter);
  }
 
  printk("BME280 Driver Init\n");
 
+ /* Read Device ID for Communication Verification */
+
  id = i2c_smbus_read_byte_data(bme280_i2c_client, 0xD0);
  printk("ID: 0x%x\n",id);
+
+ /* Read Trim Values from the Sensor and store in Global Kernel Variables */
 
  calib_T1 = i2c_smbus_read_word_data(bme280_i2c_client,0x88);
  calib_T2 = i2c_smbus_read_word_data(bme280_i2c_client,0x8A);
@@ -395,9 +466,13 @@ static int __init bme280Init(void)
  printk("BME280 Calib Values\n");
  printk("T1:%d\nT2:%d\nT3:%d\nP1:%d\nP2:%d\nP3:%d\nP4:%d\nP5:%d\nP6:%d\nP7:%d\nP8:%d\nP9:%d\n",calib_T1,calib_T2,calib_T3,calib_P1,calib_P2,calib_P3,calib_P4,calib_P5,calib_P6,calib_P7,calib_P8,calib_P9);
 
+ /* Sensor Initilatization Sequence */
+
  i2c_smbus_write_byte_data(bme280_i2c_client, 0xf5, 5<<5);
  i2c_smbus_write_byte_data(bme280_i2c_client, 0xf4, ((5<<5) | (5<<2) | (3<<0)));
  return ret;
+
+ /* Error Handling on Failure */
 
 KernelError:
         device_destroy(bme280_class, bme280_device_number);
@@ -407,6 +482,8 @@ ClassError:
         unregister_chrdev(bme280_device_number, DRIVER_NAME);
         return (-1);
 }
+
+/* Driver Uninitialization routine */
 
 static void __exit bme280Exit(void) 
 {
@@ -418,6 +495,8 @@ static void __exit bme280Exit(void)
  class_destroy(bme280_class);
  unregister_chrdev_region(bme280_device_number, 1);
 }
+
+/*Linking Init and Exit Functions to Driver Structure */
 
 module_init(bme280Init);
 module_exit(bme280Exit);
